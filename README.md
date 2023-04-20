@@ -27,7 +27,7 @@ catkin_build
 ## 3. Datasets
 We utilize 3 datasets for the evaluation. The field of view of LiDARs in each dataset is exhibited as below.
 <p align="center">
-  <img width="712pix" src="figs/Datasets.jpg">
+  <img width="712pix" src="figs/Dataset.jpg">
 </p>
 
 ### 3.1. Hilti SLAM Dataset 2021
