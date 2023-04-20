@@ -29,6 +29,7 @@ We utilize 3 datasets for the evaluation. The field of view of LiDARs in each da
 <p align="center">
   <img width="712pix" src="figs/Datasets.jpg">
 </p>
+
 ### 3.1. Hilti SLAM Dataset 2021
 The Hilti SLAM Dataset was employed for the evaluation of MA-LIO in indoor and outdoor. This dataset comprises 200Hz IMU data, OS0-64, and Livox Horizon. To access and utilize the dataset, please follow this [link](https://hilti-challenge.com/dataset-2021.html)
 
