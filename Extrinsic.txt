@@ -1,0 +1,15 @@
+Extrinsic Parameter for each LiDAR(LiDAR X from IMU)
+The form of quaternion is (qw, qx, qy, qz)
+
+Ouster
+- Quaternion: (1, 0, 0, 0)
+- Translation: (0.215, 0, 0.018)
+
+Livox Avia
+- Quaternion: (0.6965018, -0.0037329, -0.0038405, 0.717535)
+- Translation: (-1.2574, 0.413, 0.0324)
+
+Livox Tele
+- Quaternion: (0.0074645, 0.0000044, -0.0005919, -0.999972)
+- Translation: (-1.306, -0.361, 0.042)
+
