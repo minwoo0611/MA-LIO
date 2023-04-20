@@ -42,3 +42,13 @@ The City Datasets were utilized for the evaluation and ablation study of MA-LIO.
 In the datasets, we provide Livox Avia, Tele, and Ouster point files (.bin) containing full values (x, y, z, intensity, time, etc.) from their original point cloud data (PCD). The bin file names correspond to their timestamps. Additionally, the data_stamp.csv and ouster_stamp.csv files display the timestamps of our measurements, while the Groundtruth.txt file presents the ground truth trajectory with the format (timestamp, x, y, z, qx, qy, qz, qw). The xsens_imu.csv file contains IMU measurements.
 
 By using the provided file player, users can transform the .bin files and .csv files into ROS messages. In the case of Ouster data, the files are converted to sensor_msgs::PointCloud2 format, while for Livox data, they are transformed into livox_ros_driver::CustomMsg format. Finally, the IMU data is presented as sensor_msgs::Imu.
+
+To utilize the dataset, please follow these instructions:
+```
+source devel/setup.bash
+roslaunch file_player file_player.launch
+```
+- Click the "Load" button and navigate to the "City0x" folder.
+- Select the "Open" button, followed by the "Play" button.
+
+Upon completion of these steps, users can now verify the publication of ROS messages.
