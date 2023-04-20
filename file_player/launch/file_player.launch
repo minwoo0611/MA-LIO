@@ -1,0 +1,13 @@
+<launch>
+    <arg name="driver" default="file_player"/>
+    <arg name="output" default="screen"/>
+    <node name="$(arg driver)" pkg="$(arg driver)" type="$(arg driver)" output="$(arg output)">
+    </node>
+
+    <arg name="camera" default="stereo"/>
+    <arg name="frame_id" default="$(arg camera)"/>
+    <arg name="proc" default="true"/>
+
+
+   launch-prefix="xterm -e gdb --args"/> 
+</launch>

@@ -1,0 +1,29 @@
+<package>
+
+  <name>irp_sen_msgs</name>
+  <version>1.2.0</version>
+  <description>
+    ROS message definitions for IRAP.
+  </description>
+  <maintainer email="irap@kaist.ac.kr">IRAP</maintainer>
+  <author>Jinyong Jeong</author>
+  <license>BSD</license>
+
+  <url type="website">http://irap.kaist.ac.kr</url>
+  <url type="repository">https://github.com/irapkaist/irp_msgs</url>
+  <url type="bugtracker">https://github.com/irapkaist/irp_msgs/issues</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>gps_common</build_depend>
+
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>gps_common</run_depend>
+</package>
