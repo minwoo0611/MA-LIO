@@ -43,14 +43,14 @@ The UrbanNav Dataset was also employed for the evaluation. This dataset is compo
 <p align="center">
   <img width="712pix" src="figs/Map.png">
 </p>
-The City Datasets were utilized for the evaluation and ablation study of MA-LIO. This dataset was collected in urban environments using a car, exhibiting high velocity, dynamic objects, numerous rotations with U-turns, and tunnels. The dataset was acquired using three LiDAR sensors (Livox Avia, Livox Tele, and OS2-128) and a 100Hz IMU. The ground truth data was obtained using the SPAN CPT-7 system. The extrinsic transformation between the IMU and LiDAR sensors can be verified through the [Extrinsic](https://github.com/minwoo0611/MA-LIO/blob/main/Extrinsic.txt) .
+The City Datasets were utilized for the evaluation and ablation study of MA-LIO. This dataset was collected in urban environments using a car, exhibiting high velocity, dynamic objects, numerous rotations with U-turns, and tunnels. The dataset was acquired using three LiDAR sensors (Livox Avia, Livox Tele, and OS2-128) and a 100Hz IMU. The ground truth data was obtained using the SPAN CPT-7 system. 
 
 In the datasets, we provide Livox Avia, Tele, and Ouster point files (.bin) containing full values (x, y, z, intensity, time, etc.) from their original point cloud data. The bin file names correspond to their timestamps. Additionally, the data_stamp.csv and ouster_stamp.csv files display the timestamps of our measurements, while the Groundtruth.txt file presents the ground truth trajectory with the format (timestamp, x, y, z, qx, qy, qz, qw). The xsens_imu.csv file contains IMU measurements.
 
 By using the provided file player, users can transform the .bin files and .csv files into ROS messages. In the case of Ouster data, the files are converted to sensor_msgs::PointCloud2 format, while for Livox data, they are transformed into livox_ros_driver::CustomMsg format. Finally, the IMU data is presented as sensor_msgs::Imu.
 
 Users can download city dataset using the link. We exhibit and describe the each sequence in the city dataset as below.
-
+Furthermore, the extrinsic transformation between the IMU and LiDAR sensors can be verified through [Extrinsic.txt](https://github.com/minwoo0611/MA-LIO/blob/main/Extrinsic.txt)
 #### 3.3.1. City01 sequence
 <p align="center">
   <img width="712pix" src="figs/City01.png">
