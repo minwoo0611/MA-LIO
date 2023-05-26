@@ -3,7 +3,8 @@ This repository is for MA-LIO(Multiple Asynchronous LiDAR Inertial Odometry usin
 Our paper is currently under review, and the code will be released after review process.
 
 ## Time Table
-
+### 2023.05.26
+We accepted our paper in IEEE Robotics and Automation Letters (RA-L). Our paper can be checked in [here](https://github.com/minwoo0611/MA-LIO/blob/main/figs/paper.pdf).
 ### 2023.04.21
 Users can download the City dataset via Google Drive.
 ### 2023.04.20 
@@ -42,7 +43,7 @@ The UrbanNav Dataset was also employed for the evaluation. This dataset is compo
 <p align="center">
   <img width="712pix" src="figs/Map.png">
 </p>
-The City Datasets were utilized for the evaluation and ablation study of MA-LIO. This dataset was collected in urban environments using a car, exhibiting high velocity, dynamic objects, numerous rotations with U-turns, and tunnels. The dataset was acquired using three LiDAR sensors (Livox Avia, Livox Tele, and OS2-128) and a 100Hz IMU. The ground truth data was obtained using the SPAN CPT-7 system. The extrinsic transformation between the IMU and LiDAR sensors can be verified through the [Extrinsic.txt](https://github.com/minwoo0611/MA-LIO/blob/main/Extrinsic.txt) file.
+The City Datasets were utilized for the evaluation and ablation study of MA-LIO. This dataset was collected in urban environments using a car, exhibiting high velocity, dynamic objects, numerous rotations with U-turns, and tunnels. The dataset was acquired using three LiDAR sensors (Livox Avia, Livox Tele, and OS2-128) and a 100Hz IMU. The ground truth data was obtained using the SPAN CPT-7 system. The extrinsic transformation between the IMU and LiDAR sensors can be verified through the [Extrinsic](https://github.com/minwoo0611/MA-LIO/blob/main/Extrinsic.txt) .
 
 In the datasets, we provide Livox Avia, Tele, and Ouster point files (.bin) containing full values (x, y, z, intensity, time, etc.) from their original point cloud data. The bin file names correspond to their timestamps. Additionally, the data_stamp.csv and ouster_stamp.csv files display the timestamps of our measurements, while the Groundtruth.txt file presents the ground truth trajectory with the format (timestamp, x, y, z, qx, qy, qz, qw). The xsens_imu.csv file contains IMU measurements.
 
