@@ -19,7 +19,7 @@ For more detailed information, please refer to the [paper](https://ieeexplore.ie
 
 ### 2023.06.25
 
-We are delighted to release our code, MA-LIO. This is the initial release, and as such, there may be some errors or areas for improvement. We hope it will be widely used and encourage feedback and suggestions through the issue tracker at any time.
+We are delighted to release our code, MA-LIO. This is the initial release, and as such, there may be some errors or areas for improvement. **We hope it will be widely used and encourage feedback and suggestions through the issue tracker at any time**.
 
 ## 1. Prerequisites
 
