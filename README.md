@@ -1,9 +1,12 @@
 # MA-LIO (RA-L'23)
 
-This repository, MA-LIO, contains the code for ["Asynchronous Multiple LiDAR-Inertial Odometry using Point-wise Inter-LiDAR Uncertainty Propagation"](https://ieeexplore.ieee.org/abstract/document/10138602), which is accepted by RA-L 2023. MA-LIO proposes an asynchronous multiple LiDAR-inertial odometry. To deal with the abovementioned challenges in multi-LiDAR, we model point-wise uncertainty by considering the range and state covariance at each time. Furthermore, we calculate localization weight using the surrounding environment to determine the weight term during optimization.
+This repository, MA-LIO, contains the code for ["Asynchronous Multiple LiDAR-Inertial Odometry using Point-wise Inter-LiDAR Uncertainty Propagation"](https://ieeexplore.ieee.org/abstract/document/10138602), which is accepted by RA-L 2023. MA-LIO proposes an asynchronous multiple LiDAR-inertial odometry. To deal with the abovementioned challenges in multi-LiDAR, we model point-wise uncertainty by considering the range and state covariance at each time. Furthermore, we calculate localization weight using the surrounding environment to determine the weight term during optimization. In the video, **ours** corresponds to **the same as MA-LIO**.
+<div align="left">
+<img src="figs/Urban.gif" width=49.5% />
+<img src="figs/City.gif" width = 49.5% >
+</div>
 
-
-![overview](figs/fig_overview.jpg)
+Find out more about our project through our [Video](https://www.youtube.com/watch?v=M-GWxY2L_Fs) or browse our paper on [IEEE](https://ieeexplore.ieee.org/abstract/document/10138602) or [Arxiv](https://arxiv.org/abs/2305.16792).
 
 ## Contributions
 
@@ -14,14 +17,10 @@ Our work makes the following contributions:
 3. We proposed a localization weight that balances the ratio between prior and measurement residual during optimization. This enables the automatic adaptation of each residual's proportion in degenerate environments, such as tunnels and narrow corridors.
 4. We have validated our method on public and our own datasets. It is compatible with any combination of LiDARs with different scanning patterns from various manufacturers.
 
+<div align="center">
+<img src="figs/fig_overview.jpg" width=65% />
 <div align="left">
-<img src="figs/Urban.gif" width=49.5% />
-<img src="figs/City.gif" width = 49.5% >
-</div>
-
-
-Find out more about our project through our [Video](https://www.youtube.com/watch?v=M-GWxY2L_Fs) or browse our paper on [paper](https://ieeexplore.ieee.org/abstract/document/10138602) or [Arxiv](https://arxiv.org/abs/2305.16792).
-
+    
 ## Update
 
 ### 2023.06.25
