@@ -17,8 +17,7 @@
 #include <algorithm>
 #include <ros/ros.h>
 #include <ros/time.h>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <image_transport/image_transport.h>
@@ -142,12 +141,6 @@ signals:
 private:
 
     int search_bound_;
-
-    bool stereo_active_;
-    bool stereo_thermal_active_;
-    bool stereo_thermal_14bit_left_active_;
-    bool stereo_thermal_14bit_right_active_;
-
     bool omni_active_;
 
     ros::Subscriber start_sub_;
@@ -165,19 +158,6 @@ private:
     ros::Publisher livox_avia_pub_;
     ros::Publisher livox_tele_pub_;   
     ros::Publisher ouster_pub_;
-
-    ros::Publisher stereo_left_pub_;
-    ros::Publisher stereo_right_pub_;
-    ros::Publisher stereo_thermal_14bit_left_pub_;
-    ros::Publisher stereo_thermal_14bit_right_pub_;
-
-    ros::Publisher stereo_left_info_pub_;
-    ros::Publisher stereo_right_info_pub_;
-
-    ros::Publisher stereo_thermal_left_info_pub_;
-    ros::Publisher stereo_thermal_right_info_pub_;
-    ros::Publisher stereo_thermal_14bit_left_info_pub_;
-    ros::Publisher stereo_thermal_14bit_right_info_pub_;
 
     ros::Publisher clock_pub_;
 
@@ -201,9 +181,6 @@ private:
     DataThread<int64_t> velodyne_right_thread_;
     DataThread<int64_t> livox_avia_thread_;
     DataThread<int64_t> livox_tele_thread_;
-    DataThread<int64_t> stereo_thread_;
-    DataThread<int64_t> stereo_thermal_14bit_left_thread_;
-    DataThread<int64_t> stereo_thermal_14bit_right_thread_;
     DataThread<int64_t> ouster_thread_;
 
     map<int64_t, int64_t> stop_period_; //start and stop stamp
@@ -219,10 +196,6 @@ private:
     void LivoxTeleThread();
     void OusterThread();
 
-    void StereoThread();
-    void StereoThermal14BitLeftThread();
-    void StereoThermal14BitRightThread();
-
     void FilePlayerStart(const std_msgs::BoolConstPtr& msg);
     void FilePlayerStop(const std_msgs::BoolConstPtr& msg);
 
@@ -231,9 +204,6 @@ private:
     vector<string> livox_avia_file_list_;
     vector<string> livox_tele_file_list_;
     vector<string> ouster_file_list_;
-    vector<string> stereo_file_list_;
-    vector<string> stereo_thermal_14bit_left_file_list_;
-    vector<string> stereo_thermal_14bit_right_file_list_;
 
     ros::Timer timer_;
     void TimerCallback(const ros::TimerEvent&);
@@ -247,15 +217,6 @@ private:
     pair<string,sensor_msgs::PointCloud2> velodyne_right_next_;
     pair<string,livox_ros_driver::CustomMsg> livox_avia_next_;
     pair<string,livox_ros_driver::CustomMsg> livox_tele_next_;
-    pair<string,cv::Mat> stereo_left_next_img_;
-    pair<string,cv::Mat> stereo_right_next_img_;
-    pair<string,cv::Mat> stereo_thermal_14bit_left_next_img_;
-    pair<string,cv::Mat> stereo_thermal_14bit_right_next_img_;
-
-    sensor_msgs::CameraInfo stereo_left_info_;
-    sensor_msgs::CameraInfo stereo_right_info_;
-    sensor_msgs::CameraInfo stereo_thermal_14bit_left_info_;
-    sensor_msgs::CameraInfo stereo_thermal_14bit_right_info_;
 
     int GetDirList(string dir, vector<string> &files);
 

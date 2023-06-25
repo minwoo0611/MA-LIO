@@ -1,0 +1,210 @@
+common:
+    lid_topic: ["/os_cloud_node/points", "/livox/avia/points", "/livox/tele/points"]
+    lid_type: [3, 1, 1]           #1-Livox 2-Velodyne 3-Ouster
+    N_SCANS: [128, 8, 8]
+    point_filter_num: [8, 4, 4]
+    lid_num: 3
+    imu_topic: "/xsens_imu_data"
+    time_sync_en: false           # ONLY turn on when external time synchronization is really not possible
+    time_offset_lidar_to_imu: 0.0 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).
+                                  # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
+
+preprocess:
+    timestamp_unit: 0           # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
+    blind: 0
+
+mapping:
+    acc_cov: 0.011197412605492375
+    gyr_cov: 0.010270904839480961
+    b_acc_cov: 0.00011751767903346351
+    b_gyr_cov: 0.000091355383994881894
+    fov_degree:    180
+    det_range:     100.0
+    extrinsic_est_en: true      # true: enable the online estimation of IMU-LiDAR extrinsic,
+    extrinsic_T: [ 0.215, 0, 0.018, 
+                   -1.2574, 0.413, 0.0324,
+                   -1.306, -0.361, 0.042  ]
+    extrinsic_R: [ 1, 0, 0, 0,
+                   0.6965018, -0.0037329, -0.0038405, 0.717535, 
+                   0.0074645, 0.0000044, -0.0005919, -0.999972]
+
+publish:
+    path_en:  true
+    scan_publish_en:  true       # false: close all the point cloud output
+    dense_publish_en: true       # false: low down the points number in a global-frame point clouds scan.
+    scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
+
+pcd_save:
+    pcd_save_en: true
+    interval: -1                 # how many LiDAR frames saved in each pcd file; 
+                                 # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+uncertainty:
+    point_cov_max: 0.00125
+    point_cov_min: 0.00075
+    plane_cov_max: 1        # 1/2 = 1
+    plane_cov_min: 0.8      # 1/0.8 = 1.25
+    localize_cov_max: 2    
+    localize_cov_min: 0.3  
+    localize_thresh_max: 0.7 #upper, max
+    localize_thresh_min: 0.2 #lower, min
+cov_threshold: 0.5
+
+# Hilti_Uzh(0.5m)
+# uncertainty:
+#     point_cov_max: 0.001
+#     point_cov_min: 0.0025
+#     plane_cov_max: 1.5        # 1/2 = 0.5
+#     plane_cov_min: 0.8      # 1/0.5 = 2
+#     localize_cov_max: 4     
+#     localize_cov_min: 0.5   
+#     localize_thresh_max: 0.95 #upper, max
+#     localize_thresh_min: 0.3 #lower, min
+
+# matching:
+#     v_threshold: 4
+#     w_threshold: 0.5236
+#     point_threshold: 300
+#     sim_threshold: 0.95
+#     degeneracy_threshold: 0.65
+#     maximum_scan_iter: 3
+
+# Hilti_Campus(0.5m, 3)
+# uncertainty:
+    # point_cov_max: 0.00125
+    # point_cov_min: 0.00075
+    # plane_cov_max: 1        # 1/2 = 0.5
+    # plane_cov_min: 0.8      # 1/0.5 = 2
+    # localize_cov_max: 2     
+    # localize_cov_min: 0.5   
+    # localize_thresh_max: 0.9 #upper, max
+    # localize_thresh_min: 0.5 #lower, min
+
+# cov_threshold: 30
+
+# matching:
+#     v_threshold: 2
+#     w_threshold: 0.5236
+#     point_threshold: 300
+#     sim_threshold: 0.95
+#     degeneracy_threshold: 0.5
+#     maximum_scan_iter: 4
+
+# Hilti Lab
+# uncertainty: 0.3m, blind 4
+#     point_cov_max: 0.0015
+#     point_cov_min: 0.0005
+#     plane_cov_max: 1        # 1/2 = 1
+#     plane_cov_min: 0.8      # 1/0.8 = 1.25
+#     localize_cov_max: 1.5     
+#     localize_cov_min: 0.5   
+#     localize_thresh_max: 0.95 #upper, max
+#     localize_thresh_min: 0.5 #lower, min
+# cov_threshold: 1
+
+# matching:
+#     v_threshold: 2
+#     w_threshold: 0.5236
+#     point_threshold: 300
+#     sim_threshold: 0.95
+#     degeneracy_threshold: 0.5
+#     maximum_scan_iter: 4
+
+#Hilti Basement
+# uncertainty:
+#     point_cov_max: 0.0015
+#     point_cov_min: 0.001
+#     plane_cov_max: 1        # 1/2 = 1
+#     plane_cov_min: 0.8      # 1/0.8 = 1.25
+#     localize_cov_max: 1.0     
+#     localize_cov_min: 0.8   
+#     localize_thresh_max: 0.95 #upper, max
+#     localize_thresh_min: 0.5 #lower, min
+# cov_threshold: 1
+
+# matching:
+#     v_threshold: 2
+#     w_threshold: 0.5236
+#     point_threshold: 300
+#     sim_threshold: 0.95
+#     degeneracy_threshold: 0.5
+#     maximum_scan_iter: 4
+
+# ours
+# uncertainty:
+#     point_cov_max: 0.002
+#     point_cov_min: 0.001
+#     plane_cov_max: 1        # 1/2 = 1
+#     plane_cov_min: 0.8      # 1/0.8 = 1.25
+#     localize_cov_max: 3.0     
+#     localize_cov_min: 1.0   
+#     localize_thresh_max: 0.95 #upper, max
+#     localize_thresh_min: 0.3 #lower, min
+# cov_threshold: 1
+# change: true
+# matching:
+#     v_threshold: 2
+#     w_threshold: 0.5236
+#     point_threshold: 300
+#     sim_threshold: 0.95
+#     degeneracy_threshold: 0.5
+#     maximum_scan_iter: 4
+
+#jot
+# uncertainty:
+#     point_cov_max: 0.00110
+#     point_cov_min: 0.0075
+#     plane_cov_max: 1        # 1/2 = 1
+#     plane_cov_min: 0.6      # 1/0.8 = 1.25
+#     localize_cov_max: 2.0     
+#     localize_cov_min: 0.7   
+#     localize_thresh_max: 0.95 #upper, max
+#     localize_thresh_min: 0.5 #lower, min
+# cov_threshold: 1
+# change: true
+# matching:
+#     v_threshold: 2
+#     w_threshold: 0.5236
+#     point_threshold: 300
+#     sim_threshold: 0.95
+#     degeneracy_threshold: 0.5
+#     maximum_scan_iter: 4
+
+#sin
+# uncertainty:
+#     point_cov_max: 0.00125
+#     point_cov_min: 0.00075
+#     plane_cov_max: 1        # 1/2 = 1
+#     plane_cov_min: 0.8      # 1/0.8 = 1.25
+#     localize_cov_max: 3     
+#     localize_cov_min: 0.7   
+#     localize_thresh_max: 0.95 #upper, max
+#     localize_thresh_min: 0.3 #lower, min
+# cov_threshold: 1
+# change: true
+# matching:
+#     v_threshold: 2
+#     w_threshold: 0.5236
+#     point_threshold: 300
+#     sim_threshold: 0.95
+#     degeneracy_threshold: 0.5
+#     maximum_scan_iter: 4
+
+# whampo and tst
+# uncertainty:
+#     point_cov_max: 0.00125
+#     point_cov_min: 0.00075
+#     plane_cov_max: 1        # 1/2 = 1
+#     plane_cov_min: 0.8      # 1/0.8 = 1.25
+#     localize_cov_max: 1    
+#     localize_cov_min: 0.5  
+#     localize_thresh_max: 0.9 #upper, max
+#     localize_thresh_min: 0.6 #lower, min
+# cov_threshold: 1
+
+# matching:
+#     v_threshold: 2
+#     w_threshold: 0.5236
+#     point_threshold: 300
+#     sim_threshold: 0.95
+#     degeneracy_threshold: 0.5
+#     maximum_scan_iter: 4

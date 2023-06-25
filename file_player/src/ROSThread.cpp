@@ -37,10 +37,6 @@ ROSThread::ROSThread(QObject *parent, QMutex *th_mutex) :
   play_rate_ = 1.0;
   loop_flag_ = false;
   stop_skip_flag_ = true;
-  stereo_active_ = true;
-  stereo_thermal_active_ = true;
-  stereo_thermal_14bit_left_active_ = true;
-  stereo_thermal_14bit_right_active_ = true;
 
   search_bound_ = 10;
   // search_bound_ = 1000000;
@@ -63,9 +59,6 @@ ROSThread::~ROSThread()
   livox_avia_thread_.active_ = false;
   livox_tele_thread_.active_ = false;
   ouster_thread_.active_ = false;
-  //stereo_thread_.active_ = false;
-  stereo_thermal_14bit_left_thread_.active_ = false;
-  stereo_thermal_14bit_right_thread_.active_ = false;
 
   usleep(100000);
 
@@ -98,15 +91,6 @@ ROSThread::~ROSThread()
 
   ouster_thread_.cv_.notify_all();
   if(ouster_thread_.thread_.joinable()) ouster_thread_.thread_.join();
-
-  stereo_thread_.cv_.notify_all();
-  if(stereo_thread_.thread_.joinable()) stereo_thread_.thread_.join();
-
-  stereo_thermal_14bit_left_thread_.cv_.notify_all();
-  if(stereo_thermal_14bit_left_thread_.thread_.joinable()) stereo_thermal_14bit_left_thread_.thread_.join();
-
-  stereo_thermal_14bit_right_thread_.cv_.notify_all();
-  if(stereo_thermal_14bit_right_thread_.thread_.joinable()) stereo_thermal_14bit_right_thread_.thread_.join();
 }
 
 void ROSThread::ros_initialize(ros::NodeHandle &n)
@@ -135,15 +119,6 @@ void ROSThread::ros_initialize(ros::NodeHandle &n)
   livox_tele_pub_ = nh_.advertise<livox_ros_driver::CustomMsg>("/livox/tele/points", 1000);
   ouster_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/os_cloud_node/points", 10000);
 
-  //stereo_left_pub_ = nh_.advertise<sensor_msgs::Image>("/stereo/left/image_raw", 10);
-  //stereo_right_pub_ = nh_.advertise<sensor_msgs::Image>("/stereo/right/image_raw", 10);
-  //stereo_thermal_14bit_left_pub_ = nh_.advertise<sensor_msgs::Image>("/thermal_14bit_left/image_raw", 10);
-  //stereo_thermal_14bit_right_pub_ = nh_.advertise<sensor_msgs::Image>("/thermal_14bit_right/image_raw", 10);
-
-  //stereo_left_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo>("/stereo/left/camera_info", 10);
-  //stereo_right_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo>("/stereo/right/camera_info", 10);
-  //stereo_thermal_14bit_left_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo>("/thermal_14bit_left/camera_info", 10);
-  //stereo_thermal_14bit_right_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo>("/thermal_14bit_right/camera_info", 10);
 
   clock_pub_ = nh_.advertise<rosgraph_msgs::Clock>("/clock", 1);
 }
@@ -187,16 +162,7 @@ void ROSThread::Ready()
   ouster_thread_.active_ = false;
   ouster_thread_.cv_.notify_all();
   if(ouster_thread_.thread_.joinable()) ouster_thread_.thread_.join();
-  /*stereo_thread_.active_ = false;
-  stereo_thread_.cv_.notify_all();
-  if(stereo_thread_.thread_.joinable()) stereo_thread_.thread_.join();
-  stereo_thermal_14bit_left_thread_.active_ = false;
-  stereo_thermal_14bit_left_thread_.cv_.notify_all();
-  if(stereo_thermal_14bit_left_thread_.thread_.joinable()) stereo_thermal_14bit_left_thread_.thread_.join();
-  stereo_thermal_14bit_right_thread_.active_ = false;
-  stereo_thermal_14bit_right_thread_.cv_.notify_all();
-  if(stereo_thermal_14bit_right_thread_.thread_.joinable()) stereo_thermal_14bit_right_thread_.thread_.join();
-*/
+
   //check path is right or not
   ifstream f((data_folder_path_+"/sensor_data/data_stamp.csv").c_str());
   if(!f.good()){
@@ -403,97 +369,25 @@ void ROSThread::Ready()
   livox_avia_file_list_.clear();
   livox_tele_file_list_.clear();
   ouster_file_list_.clear();
-  stereo_thermal_14bit_left_file_list_.clear();
-  stereo_thermal_14bit_right_file_list_.clear();
+
 
   GetDirList(data_folder_path_ + "/sensor_data/ouster",ouster_file_list_);
-  //GetDirList(data_folder_path_ + "/sensor_data/VLP_left",velodyne_left_file_list_);
-  //GetDirList(data_folder_path_ + "/sensor_data/VLP_right",velodyne_right_file_list_);
   GetDirList(data_folder_path_ + "/sensor_data/Livox_avia",livox_avia_file_list_);
   GetDirList(data_folder_path_ + "/sensor_data/Livox_tele",livox_tele_file_list_);
-  //GetDirList(data_folder_path_ + "/image/stereo_left",stereo_file_list_);
-  //GetDirList(data_folder_path_ + "/image/stereo_thermal_14_left",stereo_thermal_14bit_left_file_list_);
-  //GetDirList(data_folder_path_ + "/image/stereo_thermal_14_right",stereo_thermal_14bit_right_file_list_);
 
-//  GetDirList(data_folder_path_ + "/omni/cam0",omni_file_list_);
-
-  //load camera info
-/*
-  left_camera_nh_ = ros::NodeHandle(nh_,"left");
-  right_camera_nh_ = ros::NodeHandle(nh_,"right");
-
-  left_cinfo_ = boost::shared_ptr<camera_info_manager::CameraInfoManager>(new camera_info_manager::CameraInfoManager(left_camera_nh_,"/stereo/left"));
-  right_cinfo_ = boost::shared_ptr<camera_info_manager::CameraInfoManager>(new camera_info_manager::CameraInfoManager(right_camera_nh_,"/stereo/right"));
-
-
-  string left_yaml_file_path = "file://" + data_folder_path_ + "/calibration/left.yaml";
-  string right_yaml_file_path = "file://" + data_folder_path_ + "/calibration/right.yaml";
-
-
-  if(left_cinfo_->validateURL(left_yaml_file_path)){
-      left_cinfo_->loadCameraInfo(left_yaml_file_path);
-//      cout << "Success to load camera info" << endl;
-      stereo_left_info_ = left_cinfo_->getCameraInfo();
-  }
-
-
-  if(right_cinfo_->validateURL(right_yaml_file_path)){
-      right_cinfo_->loadCameraInfo(right_yaml_file_path);
-//      cout << "Success to load camera info" << endl;
-      stereo_right_info_ = right_cinfo_->getCameraInfo();
-  }
-
-//load 14bit thermal camera info
-
-  thermal_14bit_left_camera_nh_ = ros::NodeHandle(nh_,"thermal_14bit_left");
-  thermal_14bit_right_camera_nh_ = ros::NodeHandle(nh_,"thermal_14bit_right");
-
-  thermal_14bit_left_cinfo_ = boost::shared_ptr<camera_info_manager::CameraInfoManager>(new camera_info_manager::CameraInfoManager(left_camera_nh_,"/stereo_thermal_14bit/left"));
-  thermal_14bit_right_cinfo_ = boost::shared_ptr<camera_info_manager::CameraInfoManager>(new camera_info_manager::CameraInfoManager(right_camera_nh_,"/stereo_thermal_14bit/right"));
-
-  string thermal_14bit_left_yaml_file_path = "file://" + data_folder_path_ + "/calibration/thermal_14bit_left.yaml";
-  string thermal_14bit_right_yaml_file_path = "file://" + data_folder_path_ + "/calibration/thermal_14bit_right.yaml";
-
-  if(thermal_14bit_left_cinfo_->validateURL(thermal_14bit_left_yaml_file_path)){
-      thermal_14bit_left_cinfo_->loadCameraInfo(thermal_14bit_left_yaml_file_path);
-//      cout << "Success to load camera info" << endl;
-      stereo_thermal_14bit_left_info_ = thermal_14bit_left_cinfo_->getCameraInfo();
-  }
-
-  if(thermal_14bit_right_cinfo_->validateURL(thermal_14bit_right_yaml_file_path)){
-      thermal_14bit_right_cinfo_->loadCameraInfo(thermal_14bit_right_yaml_file_path);
-//      cout << "Success to load camera info" << endl;
-      stereo_thermal_14bit_right_info_ = right_cinfo_->getCameraInfo();
-  }
-*/
   data_stamp_thread_.active_ = true;
-  //gps_thread_.active_ = true;
-  //inspva_thread_.active_ = true;
-  //inspvax_thread_.active_ = true;
   imu_thread_.active_ = true;
-  //velodyne_left_thread_.active_ = true;
-  //velodyne_right_thread_.active_ = true;
   livox_avia_thread_.active_ = true;
   livox_tele_thread_.active_ = true;
   ouster_thread_.active_ = true;
-/*
-  stereo_thread_.active_ = true;
-  stereo_thermal_14bit_left_thread_.active_ = true;
-  stereo_thermal_14bit_right_thread_.active_ = true;
-*/
   data_stamp_thread_.thread_ = std::thread(&ROSThread::DataStampThread,this);
-  //gps_thread_.thread_ = std::thread(&ROSThread::GpsThread,this);
-  //inspva_thread_.thread_ = std::thread(&ROSThread::InspvaThread,this);
-  //inspvax_thread_.thread_ = std::thread(&ROSThread::InspvaxThread,this);
+ 
   imu_thread_.thread_ = std::thread(&ROSThread::ImuThread,this);
-  //velodyne_left_thread_.thread_ = std::thread(&ROSThread::VelodyneLeftThread,this);
-  //velodyne_right_thread_.thread_ = std::thread(&ROSThread::VelodyneRightThread,this);
+ 
   livox_avia_thread_.thread_ = std::thread(&ROSThread::LivoxAviaThread,this);
   livox_tele_thread_.thread_ = std::thread(&ROSThread::LivoxTeleThread,this);
   ouster_thread_.thread_ = std::thread(&ROSThread::OusterThread,this);
-  //stereo_thread_.thread_ = std::thread(&ROSThread::StereoThread,this);
-  //stereo_thermal_14bit_left_thread_.thread_ = std::thread(&ROSThread::StereoThermal14BitLeftThread,this);
-  //stereo_thermal_14bit_right_thread_.thread_ = std::thread(&ROSThread::StereoThermal14BitRightThread,this);
+
 }
 
 void ROSThread::DataStampThread()
@@ -546,22 +440,12 @@ void ROSThread::DataStampThread()
     if(iter->second.compare("imu") == 0){
       imu_thread_.push(stamp);
       imu_thread_.cv_.notify_all();
-    }/*else if(iter->second.compare("inspva") == 0){
-      inspva_thread_.push(stamp);
-      inspva_thread_.cv_.notify_all();
-    }else if(iter->second.compare("inspvax") == 0){
-      inspvax_thread_.push(stamp);
-      inspvax_thread_.cv_.notify_all();
-    }*/else if(iter->second.compare("gps") == 0){
+    }
+    else if(iter->second.compare("gps") == 0){
       gps_thread_.push(stamp);
       gps_thread_.cv_.notify_all();
-    }/*else if(iter->second.compare("velodyne_left") == 0){
-        velodyne_left_thread_.push(stamp);
-        velodyne_left_thread_.cv_.notify_all();
-    }else if(iter->second.compare("velodyne_right") == 0){
-        velodyne_right_thread_.push(stamp);
-        velodyne_right_thread_.cv_.notify_all();*
-    }*/else if(iter->second.compare("livox_avia") == 0){
+    }
+    else if(iter->second.compare("livox_avia") == 0){
         livox_avia_thread_.push(stamp);
         livox_avia_thread_.cv_.notify_all();
     }else if(iter->second.compare("livox_tele") == 0){
@@ -570,16 +454,7 @@ void ROSThread::DataStampThread()
     }else if(iter->second.compare("ouster") == 0){
         ouster_thread_.push(stamp);
         ouster_thread_.cv_.notify_all();
-    }/*else if(iter->second.compare("stereo") == 0 && stereo_active_ == true){
-        stereo_thread_.push(stamp);
-        stereo_thread_.cv_.notify_all();
-    }else if(iter->second.compare("stereo_thermal_14_left") == 0 && stereo_thermal_14bit_left_active_ == true){
-        stereo_thermal_14bit_left_thread_.push(stamp);
-        stereo_thermal_14bit_left_thread_.cv_.notify_all();
-    }else if(iter->second.compare("stereo_thermal_14_right") == 0 && stereo_thermal_14bit_right_active_ == true){
-        stereo_thermal_14bit_right_thread_.push(stamp);
-        stereo_thermal_14bit_right_thread_.cv_.notify_all();
-    }*/
+    }
     stamp_show_count_++;
     if(stamp_show_count_ > 100){
       stamp_show_count_ = 0;
@@ -1123,250 +998,6 @@ void ROSThread::OusterThread()
   }
 } //end ouster
 
-void ROSThread::StereoThread()
-{
-  int current_img_index = 0;
-  int previous_img_index = 0;
-
-  while(1){
-    std::unique_lock<std::mutex> ul(stereo_thread_.mutex_);
-    stereo_thread_.cv_.wait(ul);
-    if(stereo_thread_.active_ == false) return;
-    ul.unlock();
-
-    while(!stereo_thread_.data_queue_.empty()){
-      auto data = stereo_thread_.pop();
-      //process
-      if(stereo_file_list_.size() == 0) continue;
-
-      //publish
-      if(to_string(data)+".png" == stereo_left_next_img_.first && !stereo_left_next_img_.second.empty() && !stereo_right_next_img_.second.empty()){
-        cv_bridge::CvImage left_out_msg;
-        left_out_msg.header.stamp.fromNSec(data);
-        left_out_msg.header.frame_id = "stereo_left";
-        left_out_msg.encoding = sensor_msgs::image_encodings::BAYER_BGGR8;
-        left_out_msg.image    = stereo_left_next_img_.second;
-
-        cv_bridge::CvImage right_out_msg;
-        right_out_msg.header.stamp.fromNSec(data);
-        right_out_msg.header.frame_id = "stereo_right";
-        right_out_msg.encoding = sensor_msgs::image_encodings::BAYER_BGGR8;
-        right_out_msg.image    = stereo_right_next_img_.second;
-
-        stereo_left_info_.header.stamp.fromNSec(data);
-        stereo_left_info_.header.frame_id = "/stereo/left";
-        stereo_right_info_.header.stamp.fromNSec(data);
-        stereo_right_info_.header.frame_id = "/stereo/right";
-
-        stereo_left_pub_.publish(left_out_msg.toImageMsg());
-        stereo_right_pub_.publish(right_out_msg.toImageMsg());
-
-        stereo_left_info_pub_.publish(stereo_left_info_);
-        stereo_right_info_pub_.publish(stereo_right_info_);
-
-      }else{
-//        cout << "Re-load stereo image from image path" << endl;
-
-        string current_stereo_left_name = data_folder_path_ + "/image/stereo_left" +"/"+ to_string(data)+".png";
-        string current_stereo_right_name = data_folder_path_ + "/image/stereo_right" +"/"+ to_string(data)+".png";
-        cv::Mat current_left_image;
-        cv::Mat current_right_image;
-        current_left_image = imread(current_stereo_left_name, CV_LOAD_IMAGE_ANYDEPTH);
-        current_right_image = imread(current_stereo_right_name, CV_LOAD_IMAGE_ANYDEPTH);
-
-        if(!current_left_image.empty() && !current_right_image.empty()){
-
-            cv_bridge::CvImage left_out_msg;
-            left_out_msg.header.stamp.fromNSec(data);
-            left_out_msg.header.frame_id = "stereo_left";
-            left_out_msg.encoding = sensor_msgs::image_encodings::BAYER_BGGR8;
-            left_out_msg.image    = current_left_image;
-
-            cv_bridge::CvImage right_out_msg;
-            right_out_msg.header.stamp.fromNSec(data);
-            right_out_msg.header.frame_id = "stereo_right";
-            right_out_msg.encoding = sensor_msgs::image_encodings::BAYER_BGGR8;
-            right_out_msg.image    = current_right_image;
-
-            stereo_left_info_.header.stamp.fromNSec(data);
-            stereo_left_info_.header.frame_id = "/stereo/left";
-            stereo_right_info_.header.stamp.fromNSec(data);
-            stereo_right_info_.header.frame_id = "/stereo/right";
-
-            stereo_left_pub_.publish(left_out_msg.toImageMsg());
-            stereo_right_pub_.publish(right_out_msg.toImageMsg());
-
-            stereo_left_info_pub_.publish(stereo_left_info_);
-            stereo_right_info_pub_.publish(stereo_right_info_);
-        }
-        previous_img_index = 0;
-
-
-      }
-
-      //load next image
-      current_img_index = find(next(stereo_file_list_.begin(), max(0,previous_img_index - search_bound_)),stereo_file_list_.end(),to_string(data)+".png") - stereo_file_list_.begin();
-      if(current_img_index < stereo_file_list_.size()-2){
-
-          string next_stereo_left_name = data_folder_path_ + "/image/stereo_left" +"/"+ stereo_file_list_[current_img_index+1];
-          string next_stereo_right_name = data_folder_path_ + "/image/stereo_right" +"/"+ stereo_file_list_[current_img_index+1];
-          cv::Mat next_left_image;
-          cv::Mat next_right_image;
-          next_left_image = imread(next_stereo_left_name, CV_LOAD_IMAGE_ANYDEPTH);
-          next_right_image = imread(next_stereo_right_name, CV_LOAD_IMAGE_ANYDEPTH);
-          if(!next_left_image.empty() && !next_right_image.empty()){
-              stereo_left_next_img_ = make_pair(stereo_file_list_[current_img_index+1], next_left_image);
-              stereo_right_next_img_ = make_pair(stereo_file_list_[current_img_index+1], next_right_image);
-          }
-
-      }
-      previous_img_index = current_img_index;
-    }
-    if(stereo_thread_.active_ == false) return;
-  }
-}
-
-//14bit thermal Left Thread
-void ROSThread::StereoThermal14BitLeftThread()
-{
-  int current_img_index = 0;
-  int previous_img_index = 0;
-
-  while(1){
-    std::unique_lock<std::mutex> ul(stereo_thermal_14bit_left_thread_.mutex_);
-    stereo_thermal_14bit_left_thread_.cv_.wait(ul);
-    if(stereo_thermal_14bit_left_thread_.active_ == false) return;
-    ul.unlock();
-
-    while(!stereo_thermal_14bit_left_thread_.data_queue_.empty()){
-      auto data = stereo_thermal_14bit_left_thread_.pop();
-      //process
-      if(stereo_thermal_14bit_left_file_list_.size() == 0) continue;
-
-      //publish
-      if(to_string(data)+".png" == stereo_thermal_14bit_left_next_img_.first && !stereo_thermal_14bit_left_next_img_.second.empty()){
-        cv_bridge::CvImage left_out_msg;
-        left_out_msg.header.stamp.fromNSec(data);
-        left_out_msg.header.frame_id = "stereo_thermal_14bit_left";
-        left_out_msg.encoding = sensor_msgs::image_encodings::MONO16;
-        left_out_msg.image    = stereo_thermal_14bit_left_next_img_.second;
-       
-        stereo_thermal_14bit_left_info_.header.stamp.fromNSec(data);
-        stereo_thermal_14bit_left_info_.header.frame_id = "/stereo_thermal_14bit/left";
-
-        stereo_thermal_14bit_left_pub_.publish(left_out_msg.toImageMsg());
-        stereo_thermal_14bit_left_info_pub_.publish(stereo_thermal_14bit_left_info_);
-
-      }else{
-//        cout << "Re-load stereo image from image path" << endl;
-
-        string current_stereo_thermal_14bit_left_name = data_folder_path_ + "/image/stereo_thermal_14_left" +"/"+ to_string(data)+".png";
-        cv::Mat current_left_image;
-        current_left_image = imread(current_stereo_thermal_14bit_left_name, CV_LOAD_IMAGE_ANYDEPTH);
-  
-        if(!current_left_image.empty()){
-
-            cv_bridge::CvImage left_out_msg;
-            left_out_msg.header.stamp.fromNSec(data);
-            left_out_msg.header.frame_id = "stereo_thermal_14bit_left";
-            left_out_msg.encoding = sensor_msgs::image_encodings::MONO16;
-            left_out_msg.image    = current_left_image;
-
-            stereo_thermal_14bit_left_info_.header.stamp.fromNSec(data);
-            stereo_thermal_14bit_left_info_.header.frame_id = "/stereo_thermal_14bit/left";
-            stereo_thermal_14bit_left_pub_.publish(left_out_msg.toImageMsg());
-            stereo_thermal_14bit_left_info_pub_.publish(stereo_thermal_14bit_left_info_);
-        }
-        previous_img_index = 0;
-      }
-
-      //load next image
-      current_img_index = find(next(stereo_thermal_14bit_left_file_list_.begin(), max(0,previous_img_index - search_bound_)),stereo_thermal_14bit_left_file_list_.end(),to_string(data)+".png") - stereo_thermal_14bit_left_file_list_.begin();
-      if(current_img_index < stereo_file_list_.size()-2){
-          string next_stereo_thermal_14bit_left_name = data_folder_path_ + "/image/stereo_thermal_14_left" +"/"+ stereo_thermal_14bit_left_file_list_[current_img_index+1];
-          cv::Mat next_left_image;
-          next_left_image = imread(next_stereo_thermal_14bit_left_name, CV_LOAD_IMAGE_ANYDEPTH);
-          if(!next_left_image.empty()){
-              stereo_thermal_14bit_left_next_img_ = make_pair(stereo_thermal_14bit_left_file_list_[current_img_index+1], next_left_image);
-          }
-      }
-      previous_img_index = current_img_index;
-    }
-    if(stereo_thermal_14bit_left_thread_.active_ == false) return;
-  }
-}
-//end thermal Left Thread
-
-//14bit thermal Right Thread
-void ROSThread::StereoThermal14BitRightThread()
-{
-  int current_img_index = 0;
-  int previous_img_index = 0;
-
-  while(1){
-    std::unique_lock<std::mutex> ul(stereo_thermal_14bit_right_thread_.mutex_);
-    stereo_thermal_14bit_right_thread_.cv_.wait(ul);
-    if(stereo_thermal_14bit_right_thread_.active_ == false) return;
-    ul.unlock();
-
-    while(!stereo_thermal_14bit_right_thread_.data_queue_.empty()){
-      auto data = stereo_thermal_14bit_right_thread_.pop();
-      //process
-      if(stereo_thermal_14bit_right_file_list_.size() == 0) continue;
-
-      //publish
-      if(to_string(data)+".png" == stereo_thermal_14bit_right_next_img_.first && !stereo_thermal_14bit_right_next_img_.second.empty()){
-        cv_bridge::CvImage right_out_msg;
-        right_out_msg.header.stamp.fromNSec(data);
-        right_out_msg.header.frame_id = "stereo_thermal_14bit_right";
-        right_out_msg.encoding = sensor_msgs::image_encodings::MONO16;
-        right_out_msg.image    = stereo_thermal_14bit_right_next_img_.second;
-       
-        stereo_thermal_14bit_right_info_.header.stamp.fromNSec(data);
-        stereo_thermal_14bit_right_info_.header.frame_id = "/stereo_thermal_14bit/right";
-
-        stereo_thermal_14bit_right_pub_.publish(right_out_msg.toImageMsg());
-        stereo_thermal_14bit_right_info_pub_.publish(stereo_thermal_14bit_right_info_);
-
-      }else{
-//        cout << "Re-load stereo image from image path" << endl;
-
-        string current_stereo_thermal_14bit_right_name = data_folder_path_ + "/image/stereo_thermal_14_right" +"/"+ to_string(data)+".png";
-        cv::Mat current_right_image;
-        current_right_image = imread(current_stereo_thermal_14bit_right_name, CV_LOAD_IMAGE_ANYDEPTH);
-
-        if(!current_right_image.empty()){
-
-            cv_bridge::CvImage right_out_msg;
-            right_out_msg.header.stamp.fromNSec(data);
-            right_out_msg.header.frame_id = "stereo_thermal_14bit_right";
-            right_out_msg.encoding = sensor_msgs::image_encodings::MONO16;
-            right_out_msg.image    = current_right_image;
-
-            stereo_thermal_14bit_right_info_.header.stamp.fromNSec(data);
-            stereo_thermal_14bit_right_info_.header.frame_id = "/stereo_thermal_14bit/right";
-            stereo_thermal_14bit_right_pub_.publish(right_out_msg.toImageMsg());
-            stereo_thermal_14bit_right_info_pub_.publish(stereo_thermal_14bit_right_info_);
-        }
-        previous_img_index = 0;
-      }
-
-      //load next image
-      current_img_index = find(next(stereo_thermal_14bit_right_file_list_.begin(), max(0,previous_img_index - search_bound_)),stereo_thermal_14bit_right_file_list_.end(),to_string(data)+".png") - stereo_thermal_14bit_right_file_list_.begin();
-      if(current_img_index < stereo_file_list_.size()-2){
-          string next_stereo_thermal_14bit_right_name = data_folder_path_ + "/image/stereo_thermal_14_right" +"/"+ stereo_thermal_14bit_right_file_list_[current_img_index+1];
-          cv::Mat next_right_image;
-          next_right_image = imread(next_stereo_thermal_14bit_right_name, CV_LOAD_IMAGE_ANYDEPTH);
-          if(!next_right_image.empty()){
-              stereo_thermal_14bit_right_next_img_ = make_pair(stereo_thermal_14bit_right_file_list_[current_img_index+1], next_right_image);
-          }
-      }
-      previous_img_index = current_img_index;
-    }
-    if(stereo_thermal_14bit_right_thread_.active_ == false) return;
-  }
-}
-//end thermal Right Thread
 
 int ROSThread::GetDirList(string dir, vector<string> &files)
 {
