@@ -173,7 +173,7 @@ If the modification was successful, you can check the following RViz output:
 
 ![output](figs/fig_output.png)
 
-All these steps are documented in the code. You can review the yaml file and commented code for using two LiDARs in the UrbanNav file. Following this guide will enable you to modify the code without difficulty as a SLAM engineer. Additionally, for comparison with a single LiDAR, there is a comment about running the code with a single LiDAR.
+All these steps are documented in the code. You can review the yaml file and commented code for using two LiDARs in the UrbanNav file. Following this guide will enable you to modify the code without difficulty as a SLAM engineer. Additionally, for comparison with a single LiDAR, there is a comment about running the code with a single LiDAR. You can find it easily searching the word "Especially". Also, [this issue](https://github.com/minwoo0611/MA-LIO/issues/3) helps you to run MA-LIO with single LiDAR.
 
 
 ## 4. Datasets
