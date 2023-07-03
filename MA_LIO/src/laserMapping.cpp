@@ -813,7 +813,7 @@ void visualize_state()
     
     total_distance += sqrt((state_point.pos(0) - prev_pos(0)) * (state_point.pos(0) - prev_pos(0)) + (state_point.pos(1) - prev_pos(1)) * (state_point.pos(1) - prev_pos(1)) + (state_point.pos(2) - prev_pos(2)) * (state_point.pos(2) - prev_pos(2)));
     std::cout << "\033[1;33m" << "[Total Distance]: " << "\033[0m" << "\033[1;32m" << total_distance << " meter" << "\033[0m"<< std::endl;
-    std::cout << "\033[1;33m" << "[Duration]: " << "\033[0m" << "\033[1;32m" << Measures.lidar_end_time[2] - first_lidar_time << " secs" << "\033[0m" << std::endl;
+    std::cout << "\033[1;33m" << "[Duration]: " << "\033[0m" << "\033[1;32m" << Measures.lidar_end_time[lid_num-1] - first_lidar_time << " secs" << "\033[0m" << std::endl;
     std::cout << "\033[1;33m" << "[Map Point Count (Downsample w/ "<<  filter_size_map_min << ")]: " << "\033[0m" << "\033[1;32m" << ikdtree.size() << "\033[0m"<< std::endl;
     std::cout << "\033[1;33m" << "[Computation Time]: " << "\033[0m" << "\033[1;32m" << (omp_get_wtime() - curr_time) * 1000 << " msecs" << "\033[0m" << std::endl;
     std::cout << "\033[1;33m" << "[Computation Time (Avg)]: " << "\033[0m" << "\033[1;32m" << total_computation / opt_cnt * 1000 << " msecs" << "\033[0m" << std::endl;    
