@@ -1025,12 +1025,12 @@ int main(int argc, char **argv)
             {
                 if (num == 0)
                 {
-                    for (int i = 0; i < kf.lidar_uncertainty[num].size() - 1; i++)
+                    for (int i = 0; i < (int)kf.lidar_uncertainty[num].size() - 1; i++)
                         pose_unc[num].push_back(kf.lidar_uncertainty[num][i]);
                 }
                 else
                 {
-                    for (int i = 0; i < kf.lidar_uncertainty[num].size() - 1; i++)
+                    for (int i = 0; i < (int)kf.lidar_uncertainty[num].size() - 1; i++)
                     {
                         compoundPoseWithCov(extrinsic[num], extrinsic[num].cov_, kf.lidar_uncertainty[num][i], kf.lidar_uncertainty[num][i].cov_, pose_point, pose_point.cov_, 2);
                         compoundPoseWithCov(kf.temporal_comp[num - 1], kf.temporal_comp[num - 1].cov_, pose_point, pose_point.cov_, pose_point, pose_point.cov_, 2);
