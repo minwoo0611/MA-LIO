@@ -233,7 +233,7 @@ Upon completion of these steps, users can now verify the publication of ROS mess
 
 ## 5. Acknowledgments
 
-Thanks for [Fast-LIO2](https://github.com/hku-mars/FAST_LIO), [OpenVINS](https://github.com/rpng/open_vins), [M-LOAM](https://github.com/gogojjh/M-LOAM) and [file_player](https://github.com/irapkaist/file_player).
+Thanks for [Fast-LIO2](https://github.com/hku-mars/FAST_LIO), [OpenVINS](https://github.com/rpng/open_vins), [M-LOAM](https://github.com/gogojjh/M-LOAM) and [file_player](https://github.com/irapkaist/file_player). Furtheremore, Thank [lnexenl](https://github.com/lnexenl) for maintaining the code and continuous pull request.
 
 ## Citation
 If you use our code or dataset in yorr work, please consider citing the following:
