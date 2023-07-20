@@ -634,7 +634,7 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
     }
 
     // return when no effective points
-    if (eff_feat_num < 1) {
+    if (effct_feat_num < 1) {
         ekfom_data.valid = false;
         ROS_WARN("No Effective Points! \n");
         return;
