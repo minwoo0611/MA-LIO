@@ -377,11 +377,11 @@ bool sync_packages(MeasureGroup &meas)
     if (meas.imu.size() != 0)
         meas.imu_cont.push_back(meas.imu.back());
     /*** TBD : For stabilization, 10 IMU are more used ***/
-    for (auto count = 0; count < 10; count++)
+    for (auto count = 1; count < 16; count++)
     {
         if (imu_buffer.size() < count)
             break;
-        meas.imu_cont.push_back(imu_buffer[count]);
+        meas.imu_cont.push_back(imu_buffer[count-1]);
         if (imu_buffer.size() < count)
             break;
     }
