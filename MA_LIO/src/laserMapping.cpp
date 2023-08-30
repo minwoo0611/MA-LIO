@@ -382,8 +382,6 @@ bool sync_packages(MeasureGroup &meas)
         if (imu_buffer.size() < count)
             break;
         meas.imu_cont.push_back(imu_buffer[count-1]);
-        if (imu_buffer.size() < count)
-            break;
     }
 
     for (auto i = 0; i < lid_num; i++)
