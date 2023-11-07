@@ -1,6 +1,6 @@
 # MA-LIO (RA-L'23)
 
-This repository, MA-LIO, contains the code for Asynchronous Multiple LiDAR-Inertial Odometry using Point-wise Inter-LiDAR Uncertainty Propagation, which is accepted by RA-L 2023. MA-LIO proposes an asynchronous multiple LiDAR-inertial odometry. To deal with the abovementioned challenges in multi-LiDAR, we model point-wise uncertainty by considering the range and state covariance at each time. Furthermore, we calculate localization weight using the surrounding environment to determine the weight term during optimization. In the video, **ours** corresponds to **the same as MA-LIO**.
+This repository (MA-LIO) contains the code for **Asynchronous Multiple LiDAR-Inertial Odometry using Point-wise Inter-LiDAR Uncertainty Propagation**, which is accepted by RA-L 2023. MA-LIO proposes an asynchronous multiple LiDAR-inertial odometry. To deal with the abovementioned challenges in multi-LiDAR, we model point-wise uncertainty by considering the range and state covariance at each time. Furthermore, we calculate localization weight using the surrounding environment to determine the weight term during optimization. In the video, **ours** corresponds to **the same as MA-LIO**.
 <div align="left">
 <img src="figs/Urban.gif" width=49.5% />
 <img src="figs/City.gif" width = 49.5% >
