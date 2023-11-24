@@ -52,7 +52,7 @@ To download and compile the package, use the following commands:
 cd ~/catkin_ws/src
 git clone https://github.com/minwoo0611/MA-LIO.git
 cd ..
-catkin_build
+catkin build
 ```
 
 ## 3. Launch MA-LIO
