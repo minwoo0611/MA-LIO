@@ -1040,7 +1040,7 @@ int main(int argc, char **argv)
                         compoundPoseWithCov(extrinsic[num], extrinsic[num].cov_, kf.lidar_uncertainty[num][i], kf.lidar_uncertainty[num][i].cov_, pose_point, pose_point.cov_, 2);
                         compoundPoseWithCov(kf.temporal_comp[num - 1], kf.temporal_comp[num - 1].cov_, pose_point, pose_point.cov_, pose_point, pose_point.cov_, 2);
                         compoundInvPoseWithCov(extrinsic[0], extrinsic[0].cov_, pose_point, pose_point.cov_, pose_point, pose_point.cov_, 2);
-                        pose_unc[num].push_back(kf.lidar_uncertainty[num][i]);
+                        pose_unc[num].push_back(pose_point);
                     }
                 }
             }
