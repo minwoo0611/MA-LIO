@@ -131,7 +131,7 @@ inline void compoundPoseWithCov(const Pose &pose_1, const Eigen::Matrix<double, 
         B.bottomLeftCorner<3, 3>() = Brp.transpose();
         B.bottomRightCorner<3, 3>() = Bpp;
 
-        cov_cp = cov_1_prime + cov_2 + (A1 * cov_1_prime + cov_1_prime * A1.transpose() + A2 * cov_2 + cov_2 * A2.transpose()) / 12 + B / 4;
+        cov_cp = cov_1_prime + cov_2 + (A1 * cov_2 + cov_2 * A1.transpose() + A2 * cov_1_prime + cov_1_prime * A2.transpose()) / 12 + B / 4;
         pose_cp.cov_ = cov_cp;
     }
     else
