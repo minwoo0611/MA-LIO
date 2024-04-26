@@ -142,7 +142,7 @@ void PoseInitial(Pose &pose, V3D &trans, Eigen::Quaterniond &quat, M6D cov)
 }
 
 template <typename T>
-bool esti_plane(Matrix<T, 4, 1> &pca_result, const PointVector &point, const T &threshold, double plane_cov, double cov_threshold)
+bool esti_plane(Matrix<T, 4, 1> &pca_result, const PointVector &point, const T &threshold, double &plane_cov, double cov_threshold)
 {
     Matrix<T, NUM_MATCH_POINTS, 3> A;
     Matrix<T, NUM_MATCH_POINTS, 1> b;
