@@ -169,7 +169,6 @@ bool esti_plane(Matrix<T, 4, 1> &pca_result, const PointVector &point, const T &
         for (int j = 0; j < NUM_MATCH_POINTS; j++)
         {
             plane_cov += ((cov_threshold - W(j, j)) / cov_sum) * ((cov_threshold - W(j, j)) / cov_sum) * W(j, j);
-            W(j, j) = 1 / W(j, j);
         }
     }
     normvec = A.colPivHouseholderQr().solve(b);

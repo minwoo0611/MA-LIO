@@ -650,6 +650,8 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
     {
         if (cov_plane[i] == 0)
             cov_plane[i] = 1;
+        else if (max_unit_cov == min_unit_cov)
+            cov_plane[i] = (plane_cov_max + plane_cov_min) / 2;
         else
             cov_plane[i] = 1 / ((plane_cov_max - plane_cov_min) * (cov_plane[i] - min_unit_cov) / (max_unit_cov - min_unit_cov) + plane_cov_min);
 
