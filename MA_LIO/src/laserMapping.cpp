@@ -737,7 +737,7 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
             int imu_idx = int(feats_down_body->points[i].normal_x);
             if (imu_idx >= pose_unc[which_lidar].size() - 1)
                 imu_idx = pose_unc[which_lidar].size() - 2;
-            evalPointUncertainty(feats_down_body->points[which_lidar], cov, pose_unc[which_lidar][imu_idx]);
+            evalPointUncertainty(feats_down_body->points[i], cov, pose_unc[which_lidar][imu_idx]);
             feats_down_body->points[i].normal_y = cov(0, 0) + cov(1, 1) + cov(2, 2);
         }
     }
