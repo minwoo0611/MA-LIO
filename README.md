@@ -242,7 +242,7 @@ Upon completion of these steps, users can now verify the publication of ROS mess
 Thanks for [Fast-LIO2](https://github.com/hku-mars/FAST_LIO), [OpenVINS](https://github.com/rpng/open_vins), [M-LOAM](https://github.com/gogojjh/M-LOAM) and [file_player](https://github.com/irapkaist/file_player). Furtheremore, Thank [lnexenl](https://github.com/lnexenl) for maintaining the code and continuous pull request.
 
 ## Citation
-If you use our code or dataset in yorr work, please consider citing the following:
+If you use our code or dataset in your work, please consider citing the following:
 ```bash
 @article{jung2023asynchronous,
   title={Asynchronous Multiple LiDAR-Inertial Odometry using Point-wise Inter-LiDAR Uncertainty Propagation},
