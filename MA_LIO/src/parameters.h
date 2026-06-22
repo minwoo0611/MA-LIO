@@ -1,5 +1,5 @@
 #pragma once
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <Eigen/Eigen>
 #include <Eigen/Core>
 #include <cstring>
@@ -18,4 +18,4 @@ extern float plane_th, DET_RANGE;
 
 extern double cov_threshold, point_cov_max, point_cov_min, plane_cov_max, plane_cov_min, localize_cov_max, localize_cov_min, localize_thresh_max, localize_thresh_min;
 extern shared_ptr<Preprocess> p_pre;
-void readParameters(ros::NodeHandle &n);
+void readParameters(rclcpp::Node *node);

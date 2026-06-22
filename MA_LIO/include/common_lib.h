@@ -5,14 +5,27 @@
 #include <Eigen/Eigen>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
-#include <ma_lio/Pose6D.h>
-#include <sensor_msgs/Imu.h>
-#include <nav_msgs/Odometry.h>
-#include <tf/transform_broadcaster.h>
-#include <eigen_conversions/eigen_msg.h>
+#include <rclcpp/rclcpp.hpp>
+#include <ma_lio/msg/pose6_d.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
 using namespace std;
 using namespace Eigen;
+
+// ROS2 time helpers (replace ROS1 ros::Time/.toSec()/.fromSec()).
+static inline double get_time_sec(const builtin_interfaces::msg::Time &t)
+{
+    return rclcpp::Time(t).seconds();
+}
+
+static inline rclcpp::Time get_ros_time(double timestamp)
+{
+    int32_t sec = static_cast<int32_t>(std::floor(timestamp));
+    auto nanosec_d = (timestamp - std::floor(timestamp)) * 1e9;
+    uint32_t nanosec = static_cast<uint32_t>(nanosec_d);
+    return rclcpp::Time(sec, nanosec);
+}
 
 #define USE_IKFOM
 
@@ -27,7 +40,7 @@ using namespace Eigen;
 #define DEBUG_FILE_DIR(name) (string(string(ROOT_DIR) + "Log/" + name))
 #define VF(a) Matrix<float, (a), 1>
 
-typedef ma_lio::Pose6D Pose6D;
+typedef ma_lio::msg::Pose6D Pose6D;
 typedef pcl::PointXYZINormal PointType;
 typedef pcl::PointCloud<PointType> PointCloudXYZI;
 typedef vector<PointType, Eigen::aligned_allocator<PointType>> PointVector;
@@ -49,8 +62,8 @@ struct MeasureGroup // Lidar data and imu dates for the curent process
     std::vector<double> lidar_end_time;
 
     std::vector<PointCloudXYZI::Ptr> lidar_multi;
-    deque<sensor_msgs::Imu::ConstPtr> imu;
-    deque<sensor_msgs::Imu::ConstPtr> imu_cont;
+    deque<sensor_msgs::msg::Imu::ConstSharedPtr> imu;
+    deque<sensor_msgs::msg::Imu::ConstSharedPtr> imu_cont;
     pair<Eigen::Quaterniond, Eigen::Vector3d> ext_set;
 };
 

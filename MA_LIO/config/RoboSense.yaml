@@ -1,0 +1,65 @@
+# ROS2 parameter file. `/**` matches any node name; keep it unless you set Node name explicitly.
+/**:
+  ros__parameters:
+    # ── formerly launch <param> tags ──
+    max_iteration: 3
+    filter_size_surf: 0.5
+    filter_size_map: 0.5
+    cube_side_length: 1000.0
+    plane_th: 0.4
+    range_min: 0.0
+    range_max: 1.0
+    map_file_path: ""
+
+    common:
+      # Per-sensor topics from realtime_perception (NOT the merged cloud). Edit labels to match.
+      lid_topic: ["/perception_node/lidar_107/points", "/perception_node/lidar_108/points"]
+      lid_type: [4, 4]            # 1-Livox 2-Velodyne 3-Ouster 4-RoboSense (realtime_perception cloud)
+      N_SCANS: [96, 96]           # RoboSense Airy beam count (informational for the handler)
+      point_filter_num: [4, 4]
+      lid_num: 2
+      # SINGLE IMU only — pick ONE of the two; the other is unused by MA-LIO.
+      imu_topic: "/perception_node/lidar_107/imu/data"
+      time_sync_en: false
+      time_offset_lidar_to_imu: 0.0
+
+    preprocess:
+      timestamp_unit: 0           # unused by the robosense handler (reads the `time` field in seconds)
+      blind: 0.5
+
+    mapping:
+      # === IMU noise — RETUNE for your IMU (City-dataset placeholders) ===
+      acc_cov: 0.1
+      gyr_cov: 0.1
+      b_acc_cov: 0.0001
+      b_gyr_cov: 0.0001
+      fov_degree: 180.0
+      det_range: 100.0
+      extrinsic_est_en: true
+      # one (x,y,z) per LiDAR; IMU is the reference frame. LiDAR1 includes the ~0.8 m / 90 deg offset.
+      extrinsic_T: [0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0]
+      # quaternion per LiDAR in (w, x, y, z) order. Identity placeholders.
+      extrinsic_R: [1.0, 0.0, 0.0, 0.0,
+                    1.0, 0.0, 0.0, 0.0]
+
+    publish:
+      path_en: true
+      scan_publish_en: true
+      dense_publish_en: true
+      scan_bodyframe_pub_en: true
+
+    pcd_save:
+      pcd_save_en: false
+      interval: -1
+
+    uncertainty:
+      point_cov_max: 0.00125
+      point_cov_min: 0.00075
+      plane_cov_max: 1.0
+      plane_cov_min: 0.8
+      localize_cov_max: 2.0
+      localize_cov_min: 0.3
+      localize_thresh_max: 0.7
+      localize_thresh_min: 0.2
+    cov_threshold: 0.5

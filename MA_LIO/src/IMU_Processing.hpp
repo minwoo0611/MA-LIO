@@ -6,7 +6,7 @@
 #include <thread>
 #include <fstream>
 #include <csignal>
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <so3_math.h>
 #include <Eigen/Eigen>
 #include <common_lib.h>
@@ -14,15 +14,13 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <condition_variable>
-#include <nav_msgs/Odometry.h>
+#include <nav_msgs/msg/odometry.hpp>
 #include <pcl/common/transforms.h>
 #include <pcl/kdtree/kdtree_flann.h>
-#include <tf/transform_broadcaster.h>
-#include <eigen_conversions/eigen_msg.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <geometry_msgs/Vector3.h>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <geometry_msgs/msg/vector3.hpp>
 #include "use-ikfom.hpp"
 #include "BsplineSE3.h"
 #include "associate_uct.hpp"
@@ -43,7 +41,7 @@ public:
   ~ImuProcess();
 
   void Reset();
-  void Reset(double start_timestamp, const sensor_msgs::ImuConstPtr &lastimu);
+  void Reset(double start_timestamp, const sensor_msgs::msg::Imu::ConstSharedPtr &lastimu);
   void set_gyr_cov(const V3D &scaler);
   void set_acc_cov(const V3D &scaler);
   void set_gyr_bias_cov(const V3D &b_g);
@@ -73,8 +71,8 @@ private:
   PointCloudXYZI::Ptr cur_pcl_un_2_;
   PointCloudXYZI::Ptr cur_pcl_un_3_;
 
-  sensor_msgs::ImuConstPtr last_imu_;
-  deque<sensor_msgs::ImuConstPtr> v_imu_;
+  sensor_msgs::msg::Imu::ConstSharedPtr last_imu_;
+  deque<sensor_msgs::msg::Imu::ConstSharedPtr> v_imu_;
   vector<Pose6D> IMUpose;
 
   M3D Lidar_R_wrt_IMU;
@@ -105,7 +103,7 @@ ImuProcess::ImuProcess()
   angvel_last = Zero3d;
   Lidar_T_wrt_IMU = Zero3d;
   Lidar_R_wrt_IMU = Eye3d;
-  last_imu_.reset(new sensor_msgs::Imu());
+  last_imu_.reset(new sensor_msgs::msg::Imu());
 }
 
 ImuProcess::~ImuProcess() {}
@@ -120,7 +118,7 @@ void ImuProcess::Reset()
   start_timestamp_ = -1;
   init_iter_num = 1;
   v_imu_.clear();
-  last_imu_.reset(new sensor_msgs::Imu());
+  last_imu_.reset(new sensor_msgs::msg::Imu());
   cur_pcl_un_.reset(new PointCloudXYZI());
 }
 
@@ -220,8 +218,8 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
   auto c_imu = meas.imu_cont;
   v_imu.push_front(last_imu_);
     int lid_num = meas.lidar_multi.size();
-  const double &imu_beg_time = v_imu.front()->header.stamp.toSec();
-  const double &imu_end_time = v_imu.back()->header.stamp.toSec();
+  const double &imu_beg_time = get_time_sec(v_imu.front()->header.stamp);
+  const double &imu_end_time = get_time_sec(v_imu.back()->header.stamp);
   const double &pcl_beg_time = meas.lidar_beg_time[0];
   const double &pcl_end_time = meas.lidar_end_time[lid_num - 1];
 
@@ -305,7 +303,7 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
     auto &&head = *(it_imu);
     auto &&tail = *(it_imu + 1);
 
-    if (tail->header.stamp.toSec() < last_lidar_end_time_)
+    if (get_time_sec(tail->header.stamp) < last_lidar_end_time_)
       continue;
 
     angvel_avr << 0.5 * (head->angular_velocity.x + tail->angular_velocity.x),
@@ -317,10 +315,10 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
 
     acc_avr = acc_avr * G_m_s2 / mean_acc.norm(); // - state_inout.ba;
 
-    if (head->header.stamp.toSec() < last_lidar_end_time_)
-      dt = tail->header.stamp.toSec() - last_lidar_end_time_;
+    if (get_time_sec(head->header.stamp) < last_lidar_end_time_)
+      dt = get_time_sec(tail->header.stamp) - last_lidar_end_time_;
     else
-      dt = tail->header.stamp.toSec() - head->header.stamp.toSec();
+      dt = get_time_sec(tail->header.stamp) - get_time_sec(head->header.stamp);
 
     in.acc = acc_avr;
     in.gyro = angvel_avr;
@@ -336,14 +334,14 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
       acc_s_last[i] += imu_state.grav[i]; // gravity exclude
     }
 
-    traj_point << tail->header.stamp.toSec(), imu_state.pos(0), imu_state.pos(1), imu_state.pos(2), imu_state.rot.x(), imu_state.rot.y(), imu_state.rot.z(), imu_state.rot.w();
+    traj_point << get_time_sec(tail->header.stamp), imu_state.pos(0), imu_state.pos(1), imu_state.pos(2), imu_state.rot.x(), imu_state.rot.y(), imu_state.rot.z(), imu_state.rot.w();
     traj_points.push_back(traj_point);
 
     state_cov = kf_state.getUncertainty();
 
-    imu_cov.push_back(make_pair(make_pair(tail->header.stamp.toSec(), state_cov), in));
-    IMUpose.push_back(set_pose6d(tail->header.stamp.toSec(), acc_s_last, angvel_last, imu_state.vel, imu_state.pos, imu_state.rot.toRotationMatrix()));
-    imu_meas << tail->header.stamp.toSec(), tail->angular_velocity.x, tail->angular_velocity.y, tail->angular_velocity.z, tail->linear_acceleration.x, tail->linear_acceleration.y, tail->linear_acceleration.z;
+    imu_cov.push_back(make_pair(make_pair(get_time_sec(tail->header.stamp), state_cov), in));
+    IMUpose.push_back(set_pose6d(get_time_sec(tail->header.stamp), acc_s_last, angvel_last, imu_state.vel, imu_state.pos, imu_state.rot.toRotationMatrix()));
+    imu_meas << get_time_sec(tail->header.stamp), tail->angular_velocity.x, tail->angular_velocity.y, tail->angular_velocity.z, tail->linear_acceleration.x, tail->linear_acceleration.y, tail->linear_acceleration.z;
   }
 
   kf_state.propagate_cov();
@@ -364,7 +362,7 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
 
     acc_avr = acc_avr * G_m_s2 / mean_acc.norm(); // - state_inout.ba;
 
-    dt = tail->header.stamp.toSec() - head->header.stamp.toSec();
+    dt = get_time_sec(tail->header.stamp) - get_time_sec(head->header.stamp);
 
     in.acc = acc_avr;
     in.gyro = angvel_avr;
@@ -381,18 +379,18 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
       acc_s_last[i] += imu_state.grav[i]; 
     }
 
-    traj_point << tail->header.stamp.toSec(), x_cont.pos(0), x_cont.pos(1), x_cont.pos(2), x_cont.rot.x(), x_cont.rot.y(), x_cont.rot.z(), x_cont.rot.w();
+    traj_point << get_time_sec(tail->header.stamp), x_cont.pos(0), x_cont.pos(1), x_cont.pos(2), x_cont.rot.x(), x_cont.rot.y(), x_cont.rot.z(), x_cont.rot.w();
     traj_points.push_back(traj_point);
-    IMUpose.push_back(set_pose6d(tail->header.stamp.toSec(), acc_s_last, angvel_last, imu_state.vel, imu_state.pos, imu_state.rot.toRotationMatrix()));
+    IMUpose.push_back(set_pose6d(get_time_sec(tail->header.stamp), acc_s_last, angvel_last, imu_state.vel, imu_state.pos, imu_state.rot.toRotationMatrix()));
     state_cov = kf_state.get_U();
-    imu_cov.push_back(make_pair(make_pair(tail->header.stamp.toSec(), state_cov), in));
+    imu_cov.push_back(make_pair(make_pair(get_time_sec(tail->header.stamp), state_cov), in));
   }
 
   spline_traj->feed_trajectory(traj_points);
 
   /*** calculated the pos and attitude prediction at the frame-end ***/
   c_imu.pop_front();
-  double ratio = (pcl_end_time - imu_meas(0)) / (c_imu.front()->header.stamp.toSec() - imu_meas(0));
+  double ratio = (pcl_end_time - imu_meas(0)) / (get_time_sec(c_imu.front()->header.stamp) - imu_meas(0));
 
   angvel_avr << ratio * imu_meas(1) + (1 - ratio) * c_imu.front()->angular_velocity.x,
       ratio * imu_meas(2) + (1 - ratio) * c_imu.front()->angular_velocity.y,
@@ -546,7 +544,7 @@ void ImuProcess::Process(const MeasureGroup &meas, esekfom::esekf<state_ikfom, 1
 
       cov_acc = cov_acc_scale;
       cov_gyr = cov_gyr_scale;
-      ROS_INFO("IMU Initial Done");
+      RCLCPP_INFO(rclcpp::get_logger("ma_lio"), "IMU Initial Done");
     }
 
     return;

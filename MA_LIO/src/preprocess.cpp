@@ -11,13 +11,7 @@ Preprocess::Preprocess()
 
 Preprocess::~Preprocess() {}
 
-void Preprocess::process(const livox_ros_driver::CustomMsg::ConstPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar)
-{
-  avia_handler(msg, lidar);
-  *pcl_out = pl_surf;
-}
-
-void Preprocess::process(const sensor_msgs::PointCloud2::ConstPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar)
+void Preprocess::process(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar)
 {
 
   switch (time_unit)
@@ -49,6 +43,10 @@ void Preprocess::process(const sensor_msgs::PointCloud2::ConstPtr &msg, PointClo
     velodyne_handler(msg, lidar);
     break;
 
+  case ROBOSENSE:
+    robosense_handler(msg, lidar);
+    break;
+
   default:
     printf("Error LiDAR Type");
     break;
@@ -56,53 +54,7 @@ void Preprocess::process(const sensor_msgs::PointCloud2::ConstPtr &msg, PointClo
   *pcl_out = pl_surf;
 }
 
-void Preprocess::avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg, int lidar)
-{
-  pl_surf.clear();
-  pl_corn.clear();
-  pl_full.clear();
-  double t1 = omp_get_wtime();
-  int plsize = msg->point_num;
-
-  pl_corn.reserve(plsize);
-  pl_surf.reserve(plsize);
-  pl_full.resize(plsize);
-
-  for (int i = 0; i < N_SCANS[lidar]; i++)
-  {
-    pl_buff[i].clear();
-    pl_buff[i].reserve(plsize);
-  }
-  uint valid_num = 0;
-
-  maximum_time = -9999;
-
-  for (uint i = 1; i < plsize; i++)
-  {
-    if ((msg->points[i].line < N_SCANS[lidar]) && ((msg->points[i].tag & 0x30) == 0x10 || (msg->points[i].tag & 0x30) == 0x00))
-    {
-      valid_num++;
-      if (valid_num % point_filter_num[lidar] == 0)
-      {
-        pl_full[i].x = msg->points[i].x;
-        pl_full[i].y = msg->points[i].y;
-        pl_full[i].z = msg->points[i].z;
-        pl_full[i].intensity = msg->points[i].reflectivity;
-        pl_full[i].curvature = msg->points[i].offset_time / float(1000000); // use curvature as time of each laser points, curvature unit: ms
-        if (pl_full[i].curvature > 100)
-          continue;
-        if (maximum_time < pl_full[i].curvature)
-          maximum_time = pl_full[i].curvature;
-        if ((abs(pl_full[i].x - pl_full[i - 1].x) > 1e-7) || (abs(pl_full[i].y - pl_full[i - 1].y) > 1e-7) || (abs(pl_full[i].z - pl_full[i - 1].z) > 1e-7) && (pl_full[i].x * pl_full[i].x + pl_full[i].y * pl_full[i].y + pl_full[i].z * pl_full[i].z > (blind * blind)))
-        {
-          pl_surf.push_back(pl_full[i]);
-        }
-      }
-    }
-  }
-}
-
-void Preprocess::oust64_handler(const sensor_msgs::PointCloud2::ConstPtr &msg, int lidar)
+void Preprocess::oust64_handler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, int lidar)
 {
   pl_surf.clear();
   pl_corn.clear();
@@ -113,9 +65,6 @@ void Preprocess::oust64_handler(const sensor_msgs::PointCloud2::ConstPtr &msg, i
   pl_corn.reserve(plsize);
   pl_surf.reserve(plsize);
 
-  double time_stamp = msg->header.stamp.toSec();
-  // cout << "===================================" << endl;
-  // printf("Pt size = %d, N_SCANS[lidar] = %d\r\n", plsize, N_SCANS[lidar]);
   maximum_time = -9999;
   for (int i = 0; i < pl_orig.points.size(); i++)
   {
@@ -145,7 +94,7 @@ void Preprocess::oust64_handler(const sensor_msgs::PointCloud2::ConstPtr &msg, i
   }
 }
 
-void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg, int lidar)
+void Preprocess::velodyne_handler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, int lidar)
 {
   pl_surf.clear();
   pl_corn.clear();
@@ -211,12 +160,44 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg,
   }
 }
 
-void Preprocess::pub_func(PointCloudXYZI &pl, const ros::Time &ct)
+void Preprocess::robosense_handler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, int lidar)
 {
-  pl.height = 1;
-  pl.width = pl.size();
-  sensor_msgs::PointCloud2 output;
-  pcl::toROSMsg(pl, output);
-  output.header.frame_id = "livox";
-  output.header.stamp = ct;
+  pl_surf.clear();
+  pl_corn.clear();
+  pl_full.clear();
+  pcl::PointCloud<robosense_ros::Point> pl_orig;
+  pcl::fromROSMsg(*msg, pl_orig);
+  int plsize = pl_orig.size();
+  pl_surf.reserve(plsize);
+
+  maximum_time = -9999;
+  for (int i = 0; i < plsize; i++)
+  {
+    if (i % point_filter_num[lidar] != 0)
+      continue;
+
+    double range = pl_orig.points[i].x * pl_orig.points[i].x + pl_orig.points[i].y * pl_orig.points[i].y + pl_orig.points[i].z * pl_orig.points[i].z;
+
+    if (range < (blind * blind))
+      continue;
+
+    PointType added_pt;
+    added_pt.x = pl_orig.points[i].x;
+    added_pt.y = pl_orig.points[i].y;
+    added_pt.z = pl_orig.points[i].z;
+    added_pt.intensity = pl_orig.points[i].intensity;
+    added_pt.normal_x = 0;
+    added_pt.normal_y = 0;
+    added_pt.normal_z = 0;
+    // realtime_perception publishes per-point `time` in SECONDS relative to
+    // header.stamp; MA-LIO stores curvature in milliseconds.
+    added_pt.curvature = pl_orig.points[i].time * 1000.0f; // curvature unit: ms
+    // The window reference stamp can slightly post-date the first point(s);
+    // clamp to keep curvature non-negative for downstream undistortion.
+    if (added_pt.curvature < 0.f)
+      added_pt.curvature = 0.f;
+    if (maximum_time < added_pt.curvature)
+      maximum_time = added_pt.curvature;
+    pl_surf.points.push_back(added_pt);
+  }
 }
