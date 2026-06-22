@@ -108,6 +108,13 @@ geometry_msgs::msg::Quaternion geoQuat;
 geometry_msgs::msg::PoseStamped msg_body_pose;
 
 std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster;
+Eigen::Quaterniond q_imu_base = Eigen::Quaterniond::Identity(); // IMU(body) -> base_link
+V3D t_imu_base = V3D::Zero();
+// Re-anchor: odom origin = base_link's pose at the first frame (so it starts at identity,
+// and is gravity-aligned if the robot starts upright). A = T_base0_world (world point -> odom).
+bool anchor_init = false;
+Eigen::Quaterniond q_anchor = Eigen::Quaterniond::Identity();
+V3D t_anchor = V3D::Zero();
 
 shared_ptr<ImuProcess> p_imu(new ImuProcess());
 double total_distance = 0;
@@ -436,10 +443,21 @@ void publish_frame_world(const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>:
         for (int i = 0; i < size; i++)
             RGBpointBodyToWorld(&laserCloudFullRes->points[i],&laserCloudWorld->points[i]);
 
+        // Re-anchor world points into the odom(=base0) frame so map matches the trajectory.
+        if (anchor_init)
+            for (int i = 0; i < size; i++)
+            {
+                V3D p(laserCloudWorld->points[i].x, laserCloudWorld->points[i].y, laserCloudWorld->points[i].z);
+                V3D pa = q_anchor * p + t_anchor;
+                laserCloudWorld->points[i].x = pa(0);
+                laserCloudWorld->points[i].y = pa(1);
+                laserCloudWorld->points[i].z = pa(2);
+            }
+
         sensor_msgs::msg::PointCloud2 laserCloudmsg;
         pcl::toROSMsg(*laserCloudWorld, laserCloudmsg);
         laserCloudmsg.header.stamp = get_ros_time(lidar_end_time);
-        laserCloudmsg.header.frame_id = "camera_init";
+        laserCloudmsg.header.frame_id = "odom";
         pubLaserCloudFull->publish(laserCloudmsg);
     }
 
@@ -479,12 +497,43 @@ void set_posestamp(T &out)
     out.pose.orientation.w = geoQuat.w;
 }
 
+// World->base_link = (World->IMU) composed with the static IMU->base_link.
+// MA-LIO estimates the IMU(body) pose; this expresses the output at base_link.
+void compose_base_pose(V3D &t_out, Eigen::Quaterniond &q_out)
+{
+    Eigen::Quaterniond q_wi(geoQuat.w, geoQuat.x, geoQuat.y, geoQuat.z);
+    V3D t_wi(state_point.pos(0), state_point.pos(1), state_point.pos(2));
+    // World <- base_link
+    Eigen::Quaterniond q_wb = q_wi * q_imu_base;
+    V3D t_wb = q_wi * t_imu_base + t_wi;
+    // On the first frame, latch A = inv(World<-base0) so base_link starts at the odom origin.
+    if (!anchor_init)
+    {
+        q_anchor = q_wb.conjugate();
+        t_anchor = -(q_anchor * t_wb);
+        anchor_init = true;
+    }
+    // odom(=base0) <- base_link
+    q_out = q_anchor * q_wb;
+    t_out = q_anchor * t_wb + t_anchor;
+}
+
 void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr &pubOdomAftMapped)
 {
-    odomAftMapped.header.frame_id = "camera_init";
-    odomAftMapped.child_frame_id = "body";
+    V3D t_wb;
+    Eigen::Quaterniond q_wb;
+    compose_base_pose(t_wb, q_wb);
+
+    odomAftMapped.header.frame_id = "odom";
+    odomAftMapped.child_frame_id = "base_link";
     odomAftMapped.header.stamp = get_ros_time(lidar_end_time);
-    set_posestamp(odomAftMapped.pose);
+    odomAftMapped.pose.pose.position.x = t_wb(0);
+    odomAftMapped.pose.pose.position.y = t_wb(1);
+    odomAftMapped.pose.pose.position.z = t_wb(2);
+    odomAftMapped.pose.pose.orientation.w = q_wb.w();
+    odomAftMapped.pose.pose.orientation.x = q_wb.x();
+    odomAftMapped.pose.pose.orientation.y = q_wb.y();
+    odomAftMapped.pose.pose.orientation.z = q_wb.z();
     pubOdomAftMapped->publish(odomAftMapped);
     auto P = kf.get_P();
     for (int i = 0; i < 6; i++)
@@ -499,9 +548,9 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
     }
 
     geometry_msgs::msg::TransformStamped trans;
-    trans.header.frame_id = "camera_init";
+    trans.header.frame_id = "odom";
     trans.header.stamp = odomAftMapped.header.stamp;
-    trans.child_frame_id = "body";
+    trans.child_frame_id = "base_link";
     trans.transform.translation.x = odomAftMapped.pose.pose.position.x;
     trans.transform.translation.y = odomAftMapped.pose.pose.position.y;
     trans.transform.translation.z = odomAftMapped.pose.pose.position.z;
@@ -514,9 +563,18 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
 
 void publish_path(const rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr &pubPath)
 {
-    set_posestamp(msg_body_pose);
+    V3D t_wb;
+    Eigen::Quaterniond q_wb;
+    compose_base_pose(t_wb, q_wb);
+    msg_body_pose.pose.position.x = t_wb(0);
+    msg_body_pose.pose.position.y = t_wb(1);
+    msg_body_pose.pose.position.z = t_wb(2);
+    msg_body_pose.pose.orientation.w = q_wb.w();
+    msg_body_pose.pose.orientation.x = q_wb.x();
+    msg_body_pose.pose.orientation.y = q_wb.y();
+    msg_body_pose.pose.orientation.z = q_wb.z();
     msg_body_pose.header.stamp = get_ros_time(lidar_end_time);
-    msg_body_pose.header.frame_id = "camera_init";
+    msg_body_pose.header.frame_id = "odom";
 
     /*** if path is too large, the rvis will crash ***/
     static int jjj = 0;
@@ -844,11 +902,15 @@ int main(int argc, char **argv)
 
         last_indices[num] = lid_num - num - 1;
     }
+    // Static IMU(body) -> base_link transform for odometry output (R in w,x,y,z).
+    t_imu_base = V3D(imu_base_T.at(0), imu_base_T.at(1), imu_base_T.at(2));
+    q_imu_base = Eigen::Quaterniond(imu_base_R.at(0), imu_base_R.at(1), imu_base_R.at(2), imu_base_R.at(3));
+    q_imu_base.normalize();
     kf.init_dyn_share(get_f, df_dx, df_dw, h_share_model, NUM_MAX_ITERATIONS);
     kf.extrinsicInit(ext_t, ext_q);
 
     path.header.stamp = node->now();
-    path.header.frame_id = "camera_init";
+    path.header.frame_id = "odom";
 
     memset(point_selected_surf, true, sizeof(point_selected_surf));
     memset(res_last, -1000.0f, sizeof(res_last));

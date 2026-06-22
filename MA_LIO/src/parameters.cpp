@@ -7,6 +7,7 @@ std::string map_file_path, imu_topic, root_dir = ROOT_DIR;
 std::vector<std::string> lid_topic;
 std::vector<int> lid_type, N_SCANS, point_filter_num;
 std::vector<double> extrinT, extrinR;
+std::vector<double> imu_base_T, imu_base_R;
 double time_diff_lidar_to_imu = 0.0, filter_size_surf_min = 0, filter_size_map_min = 0, fov_deg = 0, cube_len = 0, range_min, range_max;
 double gyr_cov = 0.1, acc_cov = 0.1, b_gyr_cov = 0.0001, b_acc_cov = 0.0001;
 float plane_th, DET_RANGE = 300.0f;
@@ -74,6 +75,9 @@ void readParameters(rclcpp::Node *node)
 
   extrinT = get_param<std::vector<double>>(node, "mapping.extrinsic_T", std::vector<double>());
   extrinR = get_param<std::vector<double>>(node, "mapping.extrinsic_R", std::vector<double>());
+  // IMU(body) -> base_link static transform; output odometry is expressed at base_link.
+  imu_base_T = get_param<std::vector<double>>(node, "mapping.imu_to_base_T", std::vector<double>{0.0, 0.0, 0.0});
+  imu_base_R = get_param<std::vector<double>>(node, "mapping.imu_to_base_R", std::vector<double>{1.0, 0.0, 0.0, 0.0});
   DET_RANGE = get_float(node, "mapping.det_range", 300.0f);
   fov_deg = get_param<double>(node, "mapping.fov_degree", 180.0);
   gyr_cov = get_param<double>(node, "mapping.gyr_cov", 0.1);

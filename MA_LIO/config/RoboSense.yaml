@@ -36,12 +36,21 @@
       fov_degree: 180.0
       det_range: 100.0
       extrinsic_est_en: true
-      # one (x,y,z) per LiDAR; IMU is the reference frame. LiDAR1 includes the ~0.8 m / 90 deg offset.
-      extrinsic_T: [0.0, 0.0, 0.0,
-                    0.0, 0.0, 0.0]
-      # quaternion per LiDAR in (w, x, y, z) order. Identity placeholders.
-      extrinsic_R: [1.0, 0.0, 0.0, 0.0,
-                    1.0, 0.0, 0.0, 0.0]
+      # Body/reference frame = nav IMU (lidar_nav_imu_corrected); imu_topic feeds 107 = nav.
+      # Each block is LiDAR_i -> nav_IMU. Row order matches lid_topic: [0]=nav(107), [1]=mani(108).
+      # Row0 = nav: tf2_echo lidar_nav_imu_corrected lidar_nav_corrected.
+      # Row1 = mani: tf2_echo lidar_nav_imu_corrected lidar_mani_corrected.
+      extrinsic_T: [ 0.004, 0.004, -0.005,
+                     0.495, 0.023,  0.704 ]
+      # quaternion per LiDAR in (w, x, y, z) order. tf2_echo prints (x,y,z,w) — REORDERED below.
+      # Row0 nav:  tf2 xyzw [-0.704, 0.710, -0.005, -0.005]
+      # Row1 mani: tf2 xyzw [-0.009, 0.483, -0.004,  0.875]
+      extrinsic_R: [ -0.005, -0.704,  0.710, -0.005,
+                      0.875, -0.009,  0.483, -0.004 ]
+      # Static nav_IMU -> base_link; odometry output is expressed at base_link.
+      # tf2_echo lidar_nav_imu_corrected base_link: t below, xyzw [-0.004, 0.966, -0.003, 0.259].
+      imu_to_base_T: [-0.175, 0.015, 1.087]
+      imu_to_base_R: [0.259, -0.004, 0.966, -0.003]
 
     publish:
       path_en: true

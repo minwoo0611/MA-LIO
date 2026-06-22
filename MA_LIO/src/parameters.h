@@ -12,6 +12,7 @@ extern std::string map_file_path, imu_topic, root_dir;
 extern std::vector<std::string> lid_topic;
 extern std::vector<int> lid_type, N_SCANS, point_filter_num;
 extern std::vector<double> extrinT, extrinR;
+extern std::vector<double> imu_base_T, imu_base_R; // IMU(body) -> base_link, for odom output only
 extern double time_diff_lidar_to_imu, filter_size_surf_min, filter_size_map_min, fov_deg, cube_len, range_min, range_max;
 extern double gyr_cov, acc_cov, b_gyr_cov, b_acc_cov;
 extern float plane_th, DET_RANGE;
